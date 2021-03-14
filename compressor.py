@@ -163,5 +163,5 @@ for file in listOfFiles:
         dbConnection.commit()
         print("[ERROR] Compression Failed - marked as not for compression ")
 print("[INFO] Completed Script - waiting a bit")
-time.sleep(os.environ.get('SLEEP_TIME',10))
+time.sleep(int(os.environ.get('SLEEP_TIME',10)))
 print("[INFO] Completed wait - restarting")
