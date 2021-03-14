@@ -4,7 +4,7 @@ import os.path
 import boto3
 import pymysql
 import mimetypes
-
+import time
 
 def image_transpose_exif(im): #To preserve orientation
     """
@@ -162,4 +162,6 @@ for file in listOfFiles:
         dbCursor.execute("UPDATE s3files SET s3files_compressed = 2 WHERE s3files_id = '" + str(file['s3files_id']) + "'")  # Marking it as 2 means it will be skipped - if you keep retrying downloading the same files you just gobble up bandwidth on S3
         dbConnection.commit()
         print("[ERROR] Compression Failed - marked as not for compression ")
-print("[INFO] Completed Script")
+print("[INFO] Completed Script - waiting a bit")
+time.sleep(os.environ.get('SLEEP_TIME',10))
+print("[INFO] Completed wait - restarting")
