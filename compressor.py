@@ -97,6 +97,7 @@ print("[INFO] Starting")
 
 dbConnection = pymysql.connect(
     host=os.environ.get('MYSQL_HOSTNAME'),
+    port=int(os.environ.get('MYSQL_PORT',3306)),
     user=os.environ.get('MYSQL_USER'),
     passwd=os.environ.get('MYSQL_PASSWORD'),
     database=os.environ.get('MYSQL_DATABASE')
