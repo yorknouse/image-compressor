@@ -43,7 +43,7 @@ def image_transpose_exif(im): #To preserve orientation
         return functools.reduce(trans, seq, im)
 def compressImage(file_name):
     filename, file_extension = os.path.splitext(file_name)
-    images = {};
+    images = {}
 
     try:
         firstImage = Image.open("image"+file_extension)
