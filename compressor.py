@@ -2,6 +2,7 @@ from PIL import Image
 import functools
 import os.path
 import boto3
+import botocore
 import pymysql
 import mimetypes
 import time
@@ -96,13 +97,11 @@ def compressImage(file_name):
     return images
 
 
-
 logger.info("Starting")
 
 '''
     Establish a connection to the Database
 '''
-
 dbConnection = pymysql.connect(
     host=os.environ.get('MYSQL_HOSTNAME'),
     port=int(os.environ.get('MYSQL_PORT',3306)),
@@ -139,8 +138,14 @@ for file in listOfFiles:
     counter += 1
     try:
         s3client.download_file(str(file['s3files_bucket']), fileKey, "image." + str(file['s3files_extension']))
-    except Exception as e:
-        logger.exception("Initial file error")
+    except botocore.exceptions.ClientError as e:
+        logger.exception("S3 ClientError: file may not exist or permission denied")
+        continue
+    except botocore.exceptions.NoCredentialsError as e:
+        logger.exception("AWS credentials not found")
+        continue
+    except Exception as e:  # optional catch-all for unexpected errors
+        logger.exception("Unexpected error downloading file")
         continue
     comp = compressImage(fileKey)
     if comp and len(comp) > 4:
@@ -157,6 +162,9 @@ for file in listOfFiles:
                 s3client.upload_file(type+"."+str(file['s3files_extension']), str(file['s3files_bucket']), upload,ExtraArgs=extraArgs)
             except boto3.exceptions.S3UploadFailedError:
                 logger.error("Failed to upload comp file")
+                success = False
+            except Exception as e:
+                logger.exception("Failed to upload comp file")
                 success = False
             os.remove(type+"."+str(file['s3files_extension']))
         if success:
