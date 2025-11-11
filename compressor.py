@@ -97,7 +97,7 @@ def compressImage(file_name):
 
 
 
-print("[INFO] Starting")
+logger.info("Starting")
 
 '''
     Establish a connection to the Database
@@ -112,7 +112,7 @@ dbConnection = pymysql.connect(
 )
 
 dbCursor = dbConnection.cursor(pymysql.cursors.DictCursor)
-print("[INFO] DB Connected")
+logger.info("DB Connected")
 
 '''
     Establish a S3 connection
@@ -123,25 +123,24 @@ s3client = boto3.client('s3',
                         aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY']
         )
 
-print("[INFO] S3 Connected")
+logger.info("S3 Connected")
 
-print("[INFO] Get files to compress")
+logger.info("Get files to compress")
 dbCursor.execute(
     "SELECT s3files_bucket,s3files_path,s3files_filename,s3files_extension,s3files_id,s3files_meta_public FROM s3files WHERE (s3files_compressed = 0 AND s3files_bucket = '" + os.environ['AWS_BUCKET'] + "' AND s3files_extension IN ('jpg','JPG','jpeg','JPEG','png','PNG') AND s3files_meta_deleteOn IS NULL AND s3files_meta_physicallyStored = 1) ORDER BY s3files_id ASC")  # Select everything that needs compressing
 listOfFiles = dbCursor.fetchall()
 total = len(listOfFiles)
-print("[INFO] Got file list - " + str(total))
+logger.info("Got file list - " + str(total))
 counter = 0
 for file in listOfFiles:
     fileKey = str(file['s3files_path']) + "/" + str(file['s3files_filename']) + "." + str(file['s3files_extension'])
     fileKey = fileKey.replace("\\", "")
-    print("[INFO] Starting " + str((counter/total)*100) + "%: " + str(fileKey) + " | " + str(file['s3files_id']))
+    logger.info("Starting " + str((counter/total)*100) + "%: " + str(fileKey) + " | " + str(file['s3files_id']))
     counter += 1
     try:
         s3client.download_file(str(file['s3files_bucket']), fileKey, "image." + str(file['s3files_extension']))
     except Exception as e:
-        print(e)
-        print("[ERROR] File not found")
+        logger.exception("Initial file error")
         continue
     comp = compressImage(fileKey)
     if comp and len(comp) > 4:
@@ -157,20 +156,20 @@ for file in listOfFiles:
             try:
                 s3client.upload_file(type+"."+str(file['s3files_extension']), str(file['s3files_bucket']), upload,ExtraArgs=extraArgs)
             except boto3.exceptions.S3UploadFailedError:
-                print("[ERROR] Failed to upload comp file")
+                logger.error("Failed to upload comp file")
                 success = False
             os.remove(type+"."+str(file['s3files_extension']))
         if success:
             dbCursor.execute("UPDATE s3files SET s3files_compressed = 1 WHERE s3files_id = '" + str(file['s3files_id']) + "'")
             dbConnection.commit()
-            print("[INFO] Compressed and Uploaded File")
+            logger.info("Compressed and Uploaded File")
         else:
-            print("[ERROR] Failed to upload file")
+            logger.error("Failed to upload file")
     else:
-        print(comp)
+        logger.debug(comp)
         dbCursor.execute("UPDATE s3files SET s3files_compressed = 2 WHERE s3files_id = '" + str(file['s3files_id']) + "'")  # Marking it as 2 means it will be skipped - if you keep retrying downloading the same files you just gobble up bandwidth on S3
         dbConnection.commit()
-        print("[ERROR] Compression Failed - marked as not for compression ")
-print("[INFO] Completed Script - waiting a bit")
+        logger.error("Compression Failed - marked as not for compression ")
+logger.info("Completed Script - waiting a bit")
 time.sleep(int(os.environ.get('SLEEP_TIME',10)))
-print("[INFO] Completed wait - restarting")
+logger.info("Completed wait - restarting")
