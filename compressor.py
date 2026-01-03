@@ -127,7 +127,7 @@ logger.info("S3 Connected")
 
 logger.info("Get files to compress")
 dbCursor.execute(
-    "SELECT s3files_bucket,s3files_path,s3files_filename,s3files_extension,s3files_id,s3files_meta_public FROM s3files WHERE (s3files_compressed = 0 AND s3files_bucket = '" + os.environ['AWS_BUCKET'] + "' AND s3files_extension IN ('jpg','JPG','jpeg','JPEG','png','PNG') AND s3files_meta_deleteOn IS NULL AND s3files_meta_physicallyStored = 1) ORDER BY s3files_id ASC")  # Select everything that needs compressing
+    "SELECT s3files_bucket,s3files_path,s3files_filename,s3files_extension,s3files_id,s3files_meta_public FROM s3files WHERE (s3files_compressed = 0 AND s3files_bucket = '" + os.environ['AWS_BUCKET'] + "' AND s3files_extension IN ('jpg','JPG','jpeg','JPEG','png','PNG') AND s3files_meta_deleteOn IS NULL AND s3files_meta_physicallyStored = 1) ORDER BY s3files_id")  # Select everything that needs compressing
 listOfFiles = dbCursor.fetchall()
 total = len(listOfFiles)
 logger.info("Got file list - " + str(total))
