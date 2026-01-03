@@ -7,6 +7,7 @@ import pymysql
 import mimetypes
 import time
 import logging
+import html
 
 logging.basicConfig(
     level=logging.INFO,
@@ -134,6 +135,7 @@ counter = 0
 for file in listOfFiles:
     fileKey = str(file['s3files_path']) + "/" + str(file['s3files_filename']) + "." + str(file['s3files_extension'])
     fileKey = fileKey.replace("\\", "")
+    fileKey = html.unescape(fileKey)
     logger.info("Starting " + str((counter/total)*100) + "%: " + str(fileKey) + " | " + str(file['s3files_id']))
     counter += 1
     try:
