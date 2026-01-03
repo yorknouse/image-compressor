@@ -141,7 +141,13 @@ for file in listOfFiles:
     try:
         s3client.download_file(str(file['s3files_bucket']), fileKey, "image." + str(file['s3files_extension']))
     except botocore.exceptions.ClientError as e:
-        logger.exception("S3 ClientError: file may not exist or permission denied")
+        error_code = e.response.get("Error", {}).get("Code", "Unknown")
+        logger.error(
+            "S3 ClientError [%s]: %s | %s",
+            error_code,
+            fileKey,
+            file["s3files_id"]
+        )
         continue
     except botocore.exceptions.NoCredentialsError as e:
         logger.exception("AWS credentials not found")
