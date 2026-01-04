@@ -1,4 +1,5 @@
 from PIL import Image
+from PIL.Image import Transpose
 from botocore.exceptions import ClientError, NoCredentialsError
 from boto3.s3.transfer import S3UploadFailedError
 import functools
@@ -33,16 +34,16 @@ def image_transpose_exif(im): #To preserve orientation
     """
 
     exif_orientation_tag = 0x0112
-    exif_transpose_sequences = [                   # Val  0th row  0th col
-        [],                                        #  0    (reserved)
-        [],                                        #  1   top      left
-        [Image.FLIP_LEFT_RIGHT],                   #  2   top      right
-        [Image.ROTATE_180],                        #  3   bottom   right
-        [Image.FLIP_TOP_BOTTOM],                   #  4   bottom   left
-        [Image.FLIP_LEFT_RIGHT, Image.ROTATE_90],  #  5   left     top
-        [Image.ROTATE_270],                        #  6   right    top
-        [Image.FLIP_TOP_BOTTOM, Image.ROTATE_90],  #  7   right    bottom
-        [Image.ROTATE_90],                         #  8   left     bottom
+    exif_transpose_sequences = [                           # Val  0th row  0th col
+        [],                                                #  0    (reserved)
+        [],                                                #  1   top      left
+        [Transpose.FLIP_LEFT_RIGHT],                       #  2   top      right
+        [Transpose.ROTATE_180],                            #  3   bottom   right
+        [Transpose.FLIP_TOP_BOTTOM],                       #  4   bottom   left
+        [Transpose.FLIP_LEFT_RIGHT, Transpose.ROTATE_90],  #  5   left     top
+        [Transpose.ROTATE_270],                            #  6   right    top
+        [Transpose.FLIP_TOP_BOTTOM, Transpose.ROTATE_90],  #  7   right    bottom
+        [Transpose.ROTATE_90],                             #  8   left     bottom
     ]
 
     try:
