@@ -1,8 +1,9 @@
 from PIL import Image
+from botocore.exceptions import ClientError, NoCredentialsError
+from boto3.s3.transfer import S3UploadFailedError
 import functools
 import os.path
 import boto3
-import botocore
 import pymysql
 import mimetypes
 import time
@@ -140,7 +141,7 @@ for file in listOfFiles:
     counter += 1
     try:
         s3client.download_file(str(file['s3files_bucket']), fileKey, "image." + str(file['s3files_extension']))
-    except botocore.exceptions.ClientError as e:
+    except ClientError as e:
         error_code = e.response.get("Error", {}).get("Code", "Unknown")
         logger.error(
             "S3 ClientError [%s]: %s | %s",
@@ -149,7 +150,7 @@ for file in listOfFiles:
             file["s3files_id"]
         )
         continue
-    except botocore.exceptions.NoCredentialsError as e:
+    except NoCredentialsError as e:
         logger.exception("AWS credentials not found")
         continue
     except Exception as e:  # optional catch-all for unexpected errors
@@ -168,7 +169,7 @@ for file in listOfFiles:
         for type,upload in comp.items():
             try:
                 s3client.upload_file(type+"."+str(file['s3files_extension']), str(file['s3files_bucket']), upload,ExtraArgs=extraArgs)
-            except boto3.exceptions.S3UploadFailedError:
+            except S3UploadFailedError:
                 logger.error("Failed to upload comp file")
                 success = False
             except Exception as e:
