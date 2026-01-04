@@ -18,7 +18,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def image_transpose_exif(im): #To preserve orientation
+
+def image_transpose_exif(im: Image.Image) -> Image.Image: #To preserve orientation
     """
     Apply Image.transpose to ensure 0th row of pixels is at the visual
     top of the image, and 0th column is the visual left-hand side.
