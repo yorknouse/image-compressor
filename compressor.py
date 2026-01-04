@@ -1,4 +1,5 @@
 from PIL import Image
+from PIL import ImageOps
 from PIL.Image import Transpose
 from botocore.exceptions import ClientError, NoCredentialsError
 from boto3.s3.transfer import S3UploadFailedError
@@ -48,52 +49,55 @@ def image_transpose_exif(im: Image.Image) -> Image.Image: #To preserve orientati
     ]
 
     try:
-        seq = exif_transpose_sequences[im._getexif()[exif_orientation_tag]]
+        exif: Image.Exif = im.getexif()
+        seq = exif_transpose_sequences[exif[exif_orientation_tag]]
         trans = type(im).transpose
     except Exception:
         return im
     else:
         return functools.reduce(trans, seq, im)
+
+
 def compressImage(file_name):
     filename, file_extension = os.path.splitext(file_name)
     images = {}
 
     try:
-        firstImage = Image.open("image"+file_extension)
-        rotatedImage = image_transpose_exif(firstImage)
-    except Exception as e:
+        first_image = Image.open("image"+file_extension)
+        rotated_image = ImageOps.exif_transpose(first_image)
+    except Exception:
         return False
 
     try:
-        tiny = rotatedImage.copy()
-        tiny.thumbnail((100, 100), resample=4)
+        tiny = rotated_image.copy()
+        tiny.thumbnail((100, 100), resample=Image.Resampling.LANCZOS)
         tiny.save("tiny" + file_extension, optimize=True, quality=65)
         images.update({"tiny": filename + "_tiny" + file_extension})
     except:
         pass
     try:
-        small = rotatedImage.copy()
-        small.thumbnail([400, 400], resample=4)
+        small = rotated_image.copy()
+        small.thumbnail((400, 400), resample=Image.Resampling.LANCZOS)
         small.save("small" + file_extension, optimize=True, quality=65)
         images.update({"small": filename + "_small" + file_extension})
     except:
         pass
     try:
-        medium = rotatedImage.copy()
-        medium.thumbnail([800, 800], resample=4)
+        medium = rotated_image.copy()
+        medium.thumbnail((800, 800), resample=Image.Resampling.LANCZOS)
         medium.save("medium" + file_extension, optimize=True, quality=65)
         images.update({"medium": filename + "_medium" + file_extension})
     except:
         pass
     try:
-        large = rotatedImage.copy()
-        large.thumbnail([1500, 1500], resample=4)
+        large = rotated_image.copy()
+        large.thumbnail((1500, 1500), resample=Image.Resampling.LANCZOS)
         large.save("large" + file_extension, optimize=True, quality=65)
         images.update({"large": filename + "_large" + file_extension})
     except:
         pass
     try:
-        rotatedImage.save("comp" + file_extension, optimize=True, quality=65)
+        rotated_image.save("comp" + file_extension, optimize=True, quality=65)
         images.update({"comp": filename + "_comp" + file_extension})
     except:
         pass
