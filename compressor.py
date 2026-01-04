@@ -167,16 +167,16 @@ for file in listOfFiles:
         if file['s3files_meta_public'] == 1:
             extraArgs.update({'ACL':'public-read'})
         success = True
-        for type,upload in comp.items():
+        for file_type, upload in comp.items():
             try:
-                s3client.upload_file(type+"."+str(file['s3files_extension']), str(file['s3files_bucket']), upload,ExtraArgs=extraArgs)
+                s3client.upload_file(file_type+"."+str(file['s3files_extension']), str(file['s3files_bucket']), upload,ExtraArgs=extraArgs)
             except S3UploadFailedError:
                 logger.error("Failed to upload comp file")
                 success = False
             except Exception as e:
                 logger.exception("Failed to upload comp file")
                 success = False
-            os.remove(type+"."+str(file['s3files_extension']))
+            os.remove(file_type+"."+str(file['s3files_extension']))
         if success:
             dbCursor.execute("UPDATE s3files SET s3files_compressed = 1 WHERE s3files_id = '" + str(file['s3files_id']) + "'")
             dbConnection.commit()
